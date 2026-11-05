@@ -172,8 +172,15 @@ fn parse_u64_from_text(raw: &str) -> Option<u64> {
 
 #[cfg(target_os = "windows")]
 fn run_powershell_script(script: &str) -> Option<String> {
+    use std::os::windows::process::CommandExt;
+
+    // Release builds are GUI-subsystem, so without this flag every call
+    // flashes a console window (and it lands in the screen capture).
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+
     let output = Command::new("powershell")
-        .args(["-NoProfile", "-Command", script])
+        .args(["-NoProfile", "-NonInteractive", "-Command", script])
+        .creation_flags(CREATE_NO_WINDOW)
         .output()
         .ok()?;
     if !output.status.success() {

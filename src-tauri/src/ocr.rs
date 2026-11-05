@@ -131,7 +131,12 @@ fn ocr_windows(image_base64: String, language_hint: Option<String>) -> Result<St
     let _script_cleanup = TempFileCleanup::new(script_path.clone());
     let language = normalize_language_hint(language_hint.as_deref());
 
+    use std::os::windows::process::CommandExt;
+    // Without this the GUI app flashes a PowerShell console window on every OCR call.
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+
     let output = Command::new("powershell")
+        .creation_flags(CREATE_NO_WINDOW)
         .arg("-NoProfile")
         .arg("-NonInteractive")
         .arg("-ExecutionPolicy")
