@@ -728,7 +728,7 @@ export function InterviewOverlay({ mode = "detached" }: InterviewOverlayProps) {
     streamId: null,
   });
   // Push-to-talk audio hint: press once to start recording the interviewer, press
-  // again to send the buffered audio straight to Gemini (no local STT). The audio
+  // again to send the buffered audio straight to the server (no local STT). The audio
   // stream is already running (STT_ENGINE_SERVER_ONLY), so we only track how long we
   // recorded and the server drains exactly that tail. The socket's message handler
   // lives inside the live-socket effect, so it reaches the latest renderer via a ref.
@@ -741,7 +741,7 @@ export function InterviewOverlay({ mode = "detached" }: InterviewOverlayProps) {
     (payload: { type?: string; output?: string; nextSteps?: string[]; message?: string; code?: string }) => void
   >(() => {});
   // "Last N seconds" quick hint: a second button that grabs the trailing window of
-  // the already-running audio stream and sends it to Gemini in one click — no manual
+  // the already-running audio stream and sends it to the server in one click — no manual
   // start/stop like push-to-talk. The window length is the user's own setting
   // (settings.audioHintWindowSeconds, 3–15s), sent as an explicit `seconds`.
   const [audioHintTailSending, setAudioHintTailSending] = useState(false);
@@ -2061,7 +2061,7 @@ export function InterviewOverlay({ mode = "detached" }: InterviewOverlayProps) {
   }, [startDictation, stopDictation]);
 
   // Push-to-talk audio hint. Toggle: first press starts recording, second press
-  // drains the recorded audio on the server and sends it to Gemini as one clip.
+  // drains the recorded audio on the server and sends it to the model as one clip.
   // No local Whisper, no transcript text — the interviewer's voice goes to the
   // model directly, which is what keeps stray words out of the buffer.
   const toggleAudioHint = useCallback(() => {
@@ -2093,7 +2093,7 @@ export function InterviewOverlay({ mode = "detached" }: InterviewOverlayProps) {
         id: crypto.randomUUID(),
         timestamp: Date.now(),
         source: "ai_marker",
-        text: "🎙 Записываю вопрос… нажмите ещё раз, чтобы отправить в Gemini.",
+        text: "🎙 Записываю вопрос… нажмите ещё раз, чтобы отправить.",
         isFinal: true,
       });
       return;
@@ -4828,7 +4828,7 @@ export function InterviewOverlay({ mode = "detached" }: InterviewOverlayProps) {
             <button
               type="button"
               // Push-to-talk audio hint: click to start recording the interviewer,
-              // click again to send that clip straight to Gemini. No local dictation.
+              // click again to send that clip straight to the server. No local dictation.
               onClick={toggleAudioHint}
               disabled={isSafeMode || (!audioHintRecording && audioHintsRemaining <= 0)}
               title={
@@ -4839,11 +4839,11 @@ export function InterviewOverlay({ mode = "detached" }: InterviewOverlayProps) {
                     : !isRecognitionReady
                       ? t("Аудиопоток ещё подключается")
                       : audioHintRecording
-                        ? t("Остановить и отправить вопрос в Gemini")
-                        : t("Записать вопрос голосом для Gemini")
+                        ? t("Остановить и отправить вопрос")
+                        : t("Записать вопрос голосом")
               }
               aria-pressed={audioHintRecording}
-              aria-label={t("Голосовой вопрос в Gemini")}
+              aria-label={t("Голосовой вопрос")}
               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                 audioHintRecording
                   ? "border-danger/30 bg-danger-muted text-danger"
@@ -4864,7 +4864,7 @@ export function InterviewOverlay({ mode = "detached" }: InterviewOverlayProps) {
             <button
               type="button"
               // "Last N seconds" quick hint: one click sends the trailing window of the
-              // live audio stream straight to Gemini. Separate from push-to-talk (Mic) —
+              // live audio stream straight to the server. Separate from push-to-talk (Mic) —
               // no start/stop. Window length (3–15s) is the user's setting (speech tab).
               onClick={sendQuickAudioHint}
               disabled={
@@ -4880,12 +4880,12 @@ export function InterviewOverlay({ mode = "detached" }: InterviewOverlayProps) {
                     ? t("Лимит аудио-подсказок за собес исчерпан")
                     : !isRecognitionReady
                       ? t("Аудиопоток ещё подключается")
-                      : t("Отправить последние {n} сек в Gemini (осталось {r})", {
+                      : t("Отправить последние {n} сек (осталось {r})", {
                           n: settings.audioHintWindowSeconds,
                           r: audioHintsRemaining,
                         })
               }
-              aria-label={t("Отправить последние секунды в Gemini")}
+              aria-label={t("Отправить последние секунды")}
               className={`flex h-9 shrink-0 items-center justify-center gap-1 rounded-lg border px-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                 isRecognitionReady && !audioHintRecording
                   ? "border-border text-text-secondary hover:bg-bg-tertiary/60 hover:text-text-primary"
